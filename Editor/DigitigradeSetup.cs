@@ -19,7 +19,7 @@ public class DigitigradeSetup : EditorWindow
     private List<List<string>> boneNames;
 
     private Transform pelvisBone;
-
+    private GameObject pelvis;
 
     void OnGUI()
     {
@@ -52,13 +52,13 @@ public class DigitigradeSetup : EditorWindow
         creditstyle.wordWrap = true;
         creditstyle.fontSize = 11;
 
-        GUILayout.BeginHorizontal( areastyle);
+        GUILayout.BeginHorizontal(areastyle);
 
         targetObject = EditorGUILayout.ObjectField("Target Object", targetObject, typeof(GameObject), true) as GameObject;
 
         GUILayout.EndHorizontal(); ;
 
-        GUILayout.BeginHorizontal( areastyle);
+        GUILayout.BeginHorizontal(areastyle);
 
         if (GUILayout.Button("Auto Rig", buttonstyle))
         {
@@ -71,16 +71,20 @@ public class DigitigradeSetup : EditorWindow
 
         GUILayout.EndHorizontal();
 
-        GUILayout.BeginHorizontal(areastyle);
+        //Does not work currently.
 
-        if (GUILayout.Button("Helper Rig", buttonstyle))
-        {
-            HelperRig();
-        }
+        /*  GUILayout.BeginHorizontal(areastyle);
 
-        EditorGUILayout.LabelField("Rigs the avatar with helper bones, no planti required.\nUse this if your avatar has a regular rig.", textstyle);
+          if (GUILayout.Button("Helper Rig", buttonstyle))
+          {
 
-        GUILayout.EndHorizontal();
+
+              //HelperRig();
+          }
+
+          EditorGUILayout.LabelField("Rigs the avatar with helper bones, no planti required.\nUse this if your avatar has a regular rig.", textstyle);
+
+          GUILayout.EndHorizontal(); */
 
         GUILayout.BeginHorizontal(areastyle);
 
@@ -99,6 +103,8 @@ public class DigitigradeSetup : EditorWindow
         // List of bone names and their alternative naming. 
         // The code will iterate on the alternatives so you can add your own, if you use a different naming convention.
         // Make sure the words are generic and free of prefixes or symbols.
+
+        
 
         boneNames = new List<List<string>>();
 
@@ -127,8 +133,8 @@ public class DigitigradeSetup : EditorWindow
                 var digiBone = FindBone(names, s, excludedWords);
                 var plantiBone = FindBone(names, s, additionalKeywords: keywordList);
 
-                if (digiBone != null) Debug.Log("Found " + s + " digitigrade bone: " + digiBone.name);
-                if (plantiBone != null) Debug.Log("Found " + s + " plantigrade bone: " + plantiBone.name);
+                //if (digiBone != null) Debug.Log("Found " + s + " digitigrade bone: " + digiBone.name);
+               // if (plantiBone != null) Debug.Log("Found " + s + " plantigrade bone: " + plantiBone.name);
 
                 if (digiBone != null && plantiBone != null)
                 {
@@ -167,6 +173,8 @@ public class DigitigradeSetup : EditorWindow
     void HelperRig()
     {
 
+      
+
         digiBones = new List<Transform>();
 
         var helperBones = new List<Transform>();
@@ -194,6 +202,21 @@ public class DigitigradeSetup : EditorWindow
 
         pelvisBone = FindBone(new List<string> { "pelvis", "hips" }, "", excludedWords);
 
+        foreach (Transform t in targetObject.transform)
+        {
+            GameObject childGameObject = t.gameObject;
+
+            if (childGameObject.name == "Levi_Rig")
+            {
+                pelvis = childGameObject;
+
+                //Debug.Log("Found " + childGameObject.name);
+
+            }
+
+
+        }
+
         var plantlistL = new List<Transform>();
         var plantlistR = new List<Transform>();
 
@@ -210,7 +233,7 @@ public class DigitigradeSetup : EditorWindow
 
                 var digiBone = FindBone(names, s, excludedWords);
 
-                if (digiBone != null) Debug.Log("Found " + s + " digitigrade bone: " + digiBone.name);
+                //if (digiBone != null) Debug.Log("Found " + s + " digitigrade bone: " + digiBone.name);
 
                 if (digiBone != null)
                 {
@@ -242,6 +265,8 @@ public class DigitigradeSetup : EditorWindow
 
         }
 
+       
+
         var digiListLR = new List<List<Transform>>();
         var plantListLR = new List<List<Transform>>();
 
@@ -256,7 +281,7 @@ public class DigitigradeSetup : EditorWindow
         {
             int k = 0;
 
-            l[0].parent = pelvisBone.transform;
+            l[0].parent = digiListLR[j][0].parent.transform;
 
             l[1].parent = l[2];
             l[2].position = l[3].position;
@@ -268,6 +293,9 @@ public class DigitigradeSetup : EditorWindow
             l[3].position = Vector3.Lerp(new Vector3(l[1].position.x, l[3].position.y, l[1].position.z), l[3].position, 0.1f);
             l[3].parent = l[2];
 
+         //   l[1].parent = digiListLR[j][1].parent.transform;
+          //  l[2].parent = digiListLR[j][2].parent.transform;
+          //  l[3].parent = digiListLR[j][3].parent.transform;
 
             foreach (Transform t in l)
             {
@@ -296,7 +324,75 @@ public class DigitigradeSetup : EditorWindow
                 j++;
         }
 
-       
+        //Create a new Avatar Descriptor containing the dummy bones
+
+        var anim = targetObject.GetComponent<Animator>();
+
+        HumanDescription sourceHumanDescription = anim.avatar.humanDescription;
+
+        HumanDescription tmpHumanDesc = sourceHumanDescription;
+      
+        int i = 0;
+        foreach (SkeletonBone skel in sourceHumanDescription.skeleton)
+        {
+
+            tmpHumanDesc.skeleton[i].name = sourceHumanDescription.skeleton[i].name;
+            Debug.Log(sourceHumanDescription.skeleton[i].name);
+            //Debug.Log(tmpHumanDesc.skeleton[i].name);
+            i++;
+        }
+
+        i = 0;
+
+        foreach (HumanBone human in sourceHumanDescription.human)
+        {
+            tmpHumanDesc.human[i].boneName = sourceHumanDescription.human[i].boneName;
+            Debug.Log(sourceHumanDescription.human[i].boneName);
+           // Debug.Log(tmpHumanDesc.human[i].boneName);
+            i++;
+        }
+
+        Avatar newAvatar = AvatarBuilder.BuildHumanAvatar(pelvis, tmpHumanDesc);
+
+        List<string> neededBones = new List<string> { "LeftUpperLeg", "LeftLowerLeg", "LeftFoot", "LeftToes" };
+
+        i = 0;
+        foreach (string s in neededBones)
+        {
+            //Debug.Log("Searching for " + s);
+            int indexSkele = GetSkeleBoneIndexByName(sourceHumanDescription.skeleton, diglistL[i].name);
+            int index = GetBoneIndexByName(sourceHumanDescription.human, s);
+            //Debug.Log(index);
+
+            newAvatar.humanDescription.human[index].boneName = plantlistL[i].name;
+            newAvatar.humanDescription.skeleton[indexSkele].name = plantlistL[i].name;
+
+            i++;
+        }
+
+        neededBones = new List<string> { "RightUpperLeg", "RightLowerLeg", "RightFoot", "RightToes" };
+
+        i = 0;
+
+        foreach (string s in neededBones)
+        {
+           // Debug.Log("Searching for " + s);
+            int indexSkele = GetSkeleBoneIndexByName(sourceHumanDescription.skeleton, diglistR[i].name);
+            int index = GetBoneIndexByName(sourceHumanDescription.human, s);
+            //Debug.Log(index);
+
+            newAvatar.humanDescription.human[index].boneName = plantlistR[i].name;
+            newAvatar.humanDescription.skeleton[indexSkele].name = plantlistR[i].name;
+        
+            i++;
+        }
+
+        
+        newAvatar.name = "New Avatar";
+
+        string assetPath = "Assets/Editor/"+targetObject.name+".asset"; // Specify the path where you want to save the asset
+        AssetDatabase.CreateAsset(newAvatar, assetPath);
+        AssetDatabase.SaveAssets();
 
     }
         Transform FindBone(List<string> keywords, string side, List<string> excludedWords = null, List<string> additionalKeywords = null)
@@ -335,7 +431,7 @@ public class DigitigradeSetup : EditorWindow
                         if (boneName.Contains(excludedWord))
                         {
                             isExcluded = true;
-                            Debug.Log("excluded " + boneName);
+                            //Debug.Log("excluded " + boneName);
                             break;
 
                         }
@@ -363,7 +459,7 @@ public class DigitigradeSetup : EditorWindow
                         {
                             if (additionalKeywords == null || additionalKeywords.Count == 0)
                             {
-                                Debug.Log("Not looking for additional keywords");
+                                //Debug.Log("Not looking for additional keywords");
                                 return bone;
                             }
                             else
@@ -385,7 +481,7 @@ public class DigitigradeSetup : EditorWindow
                         {
                             if (additionalKeywords == null || additionalKeywords.Count == 0)
                             {
-                                Debug.Log("Found " + bone.name);
+                                //Debug.Log("Found " + bone.name);
                                 return bone;
                             }
                             else
@@ -464,6 +560,32 @@ public class DigitigradeSetup : EditorWindow
         return a;
     }
 
+    private int GetBoneIndexByName(HumanBone[] skeleton, string boneName)
+    {
+        for (int i = 0; i < skeleton.Length; i++)
+        {
+            //Debug.Log(skeleton[i].humanName);
 
+            if (skeleton[i].humanName == boneName)
+            {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private int GetSkeleBoneIndexByName(SkeletonBone[] skeleton, string boneName)
+    {
+        for (int i = 0; i < skeleton.Length; i++)
+        {
+            //Debug.Log(skeleton[i].name);
+
+            if (skeleton[i].name == boneName)
+            {
+                return i;
+            }
+        }
+        return -1;
+    }
 }
 
