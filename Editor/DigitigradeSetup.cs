@@ -73,18 +73,18 @@ public class DigitigradeSetup : EditorWindow
 
         //Does not work currently.
 
-        /*  GUILayout.BeginHorizontal(areastyle);
+        GUILayout.BeginHorizontal(areastyle);
 
-          if (GUILayout.Button("Helper Rig", buttonstyle))
-          {
+        if (GUILayout.Button("Helper Rig", buttonstyle))
+        {
 
 
-              //HelperRig();
-          }
+            HelperRig();
+        }
 
-          EditorGUILayout.LabelField("Rigs the avatar with helper bones, no planti required.\nUse this if your avatar has a regular rig.", textstyle);
+        EditorGUILayout.LabelField("Rigs the avatar with helper bones, no planti required.\nUse this if your avatar has a regular rig.", textstyle);
 
-          GUILayout.EndHorizontal(); */
+        GUILayout.EndHorizontal();
 
         GUILayout.BeginHorizontal(areastyle);
 
@@ -103,7 +103,6 @@ public class DigitigradeSetup : EditorWindow
         // List of bone names and their alternative naming. 
         // The code will iterate on the alternatives so you can add your own, if you use a different naming convention.
         // Make sure the words are generic and free of prefixes or symbols.
-
 
         digiBones = new List<Transform>();
         plantiBones = new List<Transform>();
@@ -179,6 +178,8 @@ public class DigitigradeSetup : EditorWindow
         plantiBones = new List<Transform>();
 
 
+        PrefabUtility.UnpackPrefabInstance(targetObject, PrefabUnpackMode.OutermostRoot, InteractionMode.AutomatedAction);
+
 
         var helperBones = new List<Transform>();
 
@@ -241,8 +242,9 @@ public class DigitigradeSetup : EditorWindow
                 if (digiBone != null)
                 {
                     digiBones.Add(digiBone);
-                    var helper = CreateObjectAt(digiBone.transform, "dummy_" + digiBone.name);
-
+                    //var helper = CreateObjectAt(digiBone.transform, "dummy_" + digiBone.name);
+                    var helper = CreateObjectAt(digiBone.transform, digiBone.name);
+                    digiBone.name = digiBone.name + "_dummy";
                     //Debug
 
                     //var tmpdummy = helper.AddComponent<BoxCollider>();
@@ -268,7 +270,7 @@ public class DigitigradeSetup : EditorWindow
 
         }
 
-
+        //Move and reparent the dummy bones
 
         var digiListLR = new List<List<Transform>>();
         var plantListLR = new List<List<Transform>>();
@@ -296,9 +298,9 @@ public class DigitigradeSetup : EditorWindow
             l[3].position = Vector3.Lerp(new Vector3(l[1].position.x, l[3].position.y, l[1].position.z), l[3].position, 0.1f);
             l[3].parent = l[2];
 
-            //   l[1].parent = digiListLR[j][1].parent.transform;
-            //  l[2].parent = digiListLR[j][2].parent.transform;
-            //  l[3].parent = digiListLR[j][3].parent.transform;
+            l[1].parent = digiListLR[j][1].parent.transform;
+            l[2].parent = digiListLR[j][2].parent.transform;
+            l[3].parent = digiListLR[j][3].parent.transform;
 
             foreach (Transform t in l)
             {
@@ -316,8 +318,8 @@ public class DigitigradeSetup : EditorWindow
 
                 if (k == l.Count - 1)
                 {
-                    AddParentConstraint(digiListLR[j][k], t);
-
+                    //AddParentConstraint(digiListLR[j][k], t);
+                    AddRotationConstraints(digiListLR[j][k], t);
                 }
 
                 k++;
@@ -327,75 +329,49 @@ public class DigitigradeSetup : EditorWindow
             j++;
         }
 
-        //Create a new Avatar Descriptor containing the dummy bones
 
-        var anim = targetObject.GetComponent<Animator>();
+        //Reparenting the unpacked prefab.
 
-        HumanDescription sourceHumanDescription = anim.avatar.humanDescription;
+        j = 0;
 
-        HumanDescription tmpHumanDesc = sourceHumanDescription;
-
-        int i = 0;
-        foreach (SkeletonBone skel in sourceHumanDescription.skeleton)
+        foreach (List<Transform> l in plantListLR)
         {
 
-            tmpHumanDesc.skeleton[i].name = sourceHumanDescription.skeleton[i].name;
-            Debug.Log(sourceHumanDescription.skeleton[i].name);
-            //Debug.Log(tmpHumanDesc.skeleton[i].name);
-            i++;
+
+            for (int i = 3; i >= 0; i--)
+            {
+
+                List<Transform> childTransforms = new List<Transform>();
+
+                foreach (Transform child in digiListLR[j][i])
+                {
+                   if (i<3) childTransforms.Add(child);
+                  
+
+                }
+
+                foreach (Transform childTransform in childTransforms)
+                {
+                    childTransform.parent = plantListLR[j][i];
+                }
+
+                
+
+            }
+
+            for (int i = 3; i >= 0; i--)
+            {
+                if (i > 0) digiListLR[j][i].parent = digiListLR[j][i - 1];
+                else digiListLR[j][i].parent = plantListLR[j][0].parent;
+
+            }
+
+
+                j++;
+
+
         }
 
-        i = 0;
-
-        foreach (HumanBone human in sourceHumanDescription.human)
-        {
-            tmpHumanDesc.human[i].boneName = sourceHumanDescription.human[i].boneName;
-            Debug.Log(sourceHumanDescription.human[i].boneName);
-            // Debug.Log(tmpHumanDesc.human[i].boneName);
-            i++;
-        }
-
-        Avatar newAvatar = AvatarBuilder.BuildHumanAvatar(pelvis, tmpHumanDesc);
-
-        List<string> neededBones = new List<string> { "LeftUpperLeg", "LeftLowerLeg", "LeftFoot", "LeftToes" };
-
-        i = 0;
-        foreach (string s in neededBones)
-        {
-            //Debug.Log("Searching for " + s);
-            int indexSkele = GetSkeleBoneIndexByName(sourceHumanDescription.skeleton, diglistL[i].name);
-            int index = GetBoneIndexByName(sourceHumanDescription.human, s);
-            //Debug.Log(index);
-
-            newAvatar.humanDescription.human[index].boneName = plantlistL[i].name;
-            newAvatar.humanDescription.skeleton[indexSkele].name = plantlistL[i].name;
-
-            i++;
-        }
-
-        neededBones = new List<string> { "RightUpperLeg", "RightLowerLeg", "RightFoot", "RightToes" };
-
-        i = 0;
-
-        foreach (string s in neededBones)
-        {
-            // Debug.Log("Searching for " + s);
-            int indexSkele = GetSkeleBoneIndexByName(sourceHumanDescription.skeleton, diglistR[i].name);
-            int index = GetBoneIndexByName(sourceHumanDescription.human, s);
-            //Debug.Log(index);
-
-            newAvatar.humanDescription.human[index].boneName = plantlistR[i].name;
-            newAvatar.humanDescription.skeleton[indexSkele].name = plantlistR[i].name;
-
-            i++;
-        }
-
-
-        newAvatar.name = "New Avatar";
-
-        string assetPath = "Assets/Editor/" + targetObject.name + ".asset"; // Specify the path where you want to save the asset
-        AssetDatabase.CreateAsset(newAvatar, assetPath);
-        AssetDatabase.SaveAssets();
 
     }
     Transform FindBone(List<string> keywords, string side, List<string> excludedWords = null, List<string> additionalKeywords = null)
