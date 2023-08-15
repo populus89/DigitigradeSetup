@@ -12,9 +12,9 @@ Plantigrade bones require a "planti" or "plantigrade" prefix.
 
 INSTALLATION
 
-If using the Unitypackage from the releases, simply drag it to your project.
+If you are using the Unitypackage from the releases, simply drag it to your project.
 
-If you downloaded the code, put DigitigradeSetup.cs in Assets/Editor/
+If you downloaded the code, put DigitigradeSetup.cs in Assets/Editor/ .
 If there is no Editor folder, simply create it.
 
 If the installation went well, you should be access the utility from tools/Digitigrade Setup
