@@ -104,7 +104,9 @@ public class DigitigradeSetup : EditorWindow
         // The code will iterate on the alternatives so you can add your own, if you use a different naming convention.
         // Make sure the words are generic and free of prefixes or symbols.
 
-        
+
+        digiBones = new List<Transform>();
+        plantiBones = new List<Transform>();
 
         boneNames = new List<List<string>>();
 
@@ -115,7 +117,7 @@ public class DigitigradeSetup : EditorWindow
 
         // Excluded words for digitigrade bones and required names for plantigrade bones.
 
-        List<string> excludedWords = new List<string> { "planti", "ctrl", "fix", "prop", "cloth", "plantigrade", "plant", "dummy", "_end",".end" };
+        List<string> excludedWords = new List<string> { "planti", "ctrl", "fix", "prop", "cloth", "plantigrade", "plant", "dummy", "_end", ".end" };
         List<string> keywordList = new List<string> { "planti", "plantigrade", "plant" };
 
         pelvisBone = FindBone(new List<string> { "pelvis", "hips" }, "", excludedWords);
@@ -134,7 +136,7 @@ public class DigitigradeSetup : EditorWindow
                 var plantiBone = FindBone(names, s, additionalKeywords: keywordList);
 
                 //if (digiBone != null) Debug.Log("Found " + s + " digitigrade bone: " + digiBone.name);
-               // if (plantiBone != null) Debug.Log("Found " + s + " plantigrade bone: " + plantiBone.name);
+                // if (plantiBone != null) Debug.Log("Found " + s + " plantigrade bone: " + plantiBone.name);
 
                 if (digiBone != null && plantiBone != null)
                 {
@@ -173,9 +175,10 @@ public class DigitigradeSetup : EditorWindow
     void HelperRig()
     {
 
-      
-
         digiBones = new List<Transform>();
+        plantiBones = new List<Transform>();
+
+
 
         var helperBones = new List<Transform>();
 
@@ -198,7 +201,7 @@ public class DigitigradeSetup : EditorWindow
 
         // Excluded words for digitigrade bones and required names for plantigrade bones.
 
-        List<string> excludedWords = new List<string> { "planti", "ctrl", "fix", "prop", "cloth", "plantigrade", "plant", "dummy" ,"_end", ".end"};
+        List<string> excludedWords = new List<string> { "planti", "ctrl", "fix", "prop", "cloth", "plantigrade", "plant", "dummy", "_end", ".end" };
 
         pelvisBone = FindBone(new List<string> { "pelvis", "hips" }, "", excludedWords);
 
@@ -265,7 +268,7 @@ public class DigitigradeSetup : EditorWindow
 
         }
 
-       
+
 
         var digiListLR = new List<List<Transform>>();
         var plantListLR = new List<List<Transform>>();
@@ -293,35 +296,35 @@ public class DigitigradeSetup : EditorWindow
             l[3].position = Vector3.Lerp(new Vector3(l[1].position.x, l[3].position.y, l[1].position.z), l[3].position, 0.1f);
             l[3].parent = l[2];
 
-         //   l[1].parent = digiListLR[j][1].parent.transform;
-          //  l[2].parent = digiListLR[j][2].parent.transform;
-          //  l[3].parent = digiListLR[j][3].parent.transform;
+            //   l[1].parent = digiListLR[j][1].parent.transform;
+            //  l[2].parent = digiListLR[j][2].parent.transform;
+            //  l[3].parent = digiListLR[j][3].parent.transform;
 
             foreach (Transform t in l)
             {
 
-                    if (k < l.Count - 2)
-                    {
-                        AddRotationConstraints(digiListLR[j][k], t);
-                    }
+                if (k < l.Count - 2)
+                {
+                    AddRotationConstraints(digiListLR[j][k], t);
+                }
 
-                    if (k == l.Count - 2)
-                    {
-                        AddRotationConstraints(digiListLR[j][k], l[0]);
+                if (k == l.Count - 2)
+                {
+                    AddRotationConstraints(digiListLR[j][k], l[0]);
 
-                    }
+                }
 
-                    if (k == l.Count - 1)
-                    {
-                        AddParentConstraint(digiListLR[j][k], t);
+                if (k == l.Count - 1)
+                {
+                    AddParentConstraint(digiListLR[j][k], t);
 
-                    }
+                }
 
                 k++;
             }
 
 
-                j++;
+            j++;
         }
 
         //Create a new Avatar Descriptor containing the dummy bones
@@ -331,7 +334,7 @@ public class DigitigradeSetup : EditorWindow
         HumanDescription sourceHumanDescription = anim.avatar.humanDescription;
 
         HumanDescription tmpHumanDesc = sourceHumanDescription;
-      
+
         int i = 0;
         foreach (SkeletonBone skel in sourceHumanDescription.skeleton)
         {
@@ -348,7 +351,7 @@ public class DigitigradeSetup : EditorWindow
         {
             tmpHumanDesc.human[i].boneName = sourceHumanDescription.human[i].boneName;
             Debug.Log(sourceHumanDescription.human[i].boneName);
-           // Debug.Log(tmpHumanDesc.human[i].boneName);
+            // Debug.Log(tmpHumanDesc.human[i].boneName);
             i++;
         }
 
@@ -376,26 +379,26 @@ public class DigitigradeSetup : EditorWindow
 
         foreach (string s in neededBones)
         {
-           // Debug.Log("Searching for " + s);
+            // Debug.Log("Searching for " + s);
             int indexSkele = GetSkeleBoneIndexByName(sourceHumanDescription.skeleton, diglistR[i].name);
             int index = GetBoneIndexByName(sourceHumanDescription.human, s);
             //Debug.Log(index);
 
             newAvatar.humanDescription.human[index].boneName = plantlistR[i].name;
             newAvatar.humanDescription.skeleton[indexSkele].name = plantlistR[i].name;
-        
+
             i++;
         }
 
-        
+
         newAvatar.name = "New Avatar";
 
-        string assetPath = "Assets/Editor/"+targetObject.name+".asset"; // Specify the path where you want to save the asset
+        string assetPath = "Assets/Editor/" + targetObject.name + ".asset"; // Specify the path where you want to save the asset
         AssetDatabase.CreateAsset(newAvatar, assetPath);
         AssetDatabase.SaveAssets();
 
     }
-        Transform FindBone(List<string> keywords, string side, List<string> excludedWords = null, List<string> additionalKeywords = null)
+    Transform FindBone(List<string> keywords, string side, List<string> excludedWords = null, List<string> additionalKeywords = null)
     {
         string[] prefixes;
         bool isPrefixed = false;
