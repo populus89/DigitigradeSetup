@@ -26,3 +26,8 @@ If you did not add planti bones to your avatar using 3D software, use the "Helpe
 WARNING: The prefab will need to be unpacked and bones will be renamed and reparented, so make sure this is the last step after you have finished everything else on your model! Making a duplicate is also a good idea!
 
 For avatars that have both planti and digi bones, use the Auto Rig option. It will simply create the needed constraints and it will not upack or do anything to the asset.
+
+CREDITS
+
+DragonSkyRunner for creating the original method.
+https://www.furaffinity.net/view/44035707/
